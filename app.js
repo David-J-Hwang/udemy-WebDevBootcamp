@@ -2,6 +2,8 @@
 // - Open mongod: brew services start mongodb-community
 // - Open mongosh: mongosh
 // (127.0.0.1)
+// MUST use url to this:
+// https://source.unsplash.com/collection/483251
 // ========================================================================
 
 // ======================== External Modules ========================
