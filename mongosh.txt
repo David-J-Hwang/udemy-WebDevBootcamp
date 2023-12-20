@@ -1,0 +1,4 @@
+- Open mongod: brew services start mongodb-community
+- Open mongosh: mongosh
+
+- ejs-mate: reusable ejs templates
