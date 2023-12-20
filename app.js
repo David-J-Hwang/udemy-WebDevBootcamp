@@ -16,8 +16,9 @@ const app = express()
 const PORT = 3000
 // ================================================================
 
-// ======================== Using Async Error Handler ========================
+// ======================== Using Custom Error Handler ========================
 const catchAsync = require('./utils/catchAsync')
+const ExpressError = require('./utils/ExpressError')
 // ===========================================================================
 
 // ======================== Using mongoose ========================
@@ -28,6 +29,11 @@ const db = mongoose.connection
 db.on('error', console.error.bind(console, "connection error:"))
 db.once('open', () => console.log('DATABASE CONNECTED!'.bgCyan))
 // ================================================================
+
+// ======================== Using Joi ========================
+// const Joi = require('joi')
+const { campgroundSchema } = require('./schemas')
+// ===========================================================
 
 // ======================== Using ejs ========================
 const path = require('path')
@@ -49,6 +55,21 @@ app.use(methodOverride('_method'))
 app.use(express.urlencoded({ extended: true }))
 // ===================================================================
 
+// ======================== Using Custom Middleware ========================
+// if(!req.body.campground) throw new ExpressError('Invalid campground data', 400)
+// not a mongoose schema, validate before storing data into mongoose
+const validateCampground = (req, res, next) => {
+  const { error } = campgroundSchema.validate(req.body)
+  if(error){
+    const msg = error.details.map(el => el.message).join(',')
+    throw new ExpressError(msg, 400)
+  } else {
+    next()
+  }
+    // console.log(result)
+}
+// =========================================================================
+
 // ======================== Routes ========================
 app.get('/', (req, res) => {
   res.render('campgrounds/home')
@@ -63,7 +84,7 @@ app.get('/campgrounds/new', (req, res) => {
   res.render('campgrounds/new')
 })
 
-app.post('/campgrounds', catchAsync(async (req, res, next) => {
+app.post('/campgrounds', validateCampground, catchAsync(async (req, res, next) => {
   // res.send(req.body)
   const campground = new Campground(req.body.campground)
   await campground.save()
@@ -82,7 +103,7 @@ app.get('/campgrounds/:id/edit', catchAsync(async (req, res) => {
   res.render('campgrounds/edit', { campground })
 }))
 
-app.put('/campgrounds/:id', catchAsync(async (req, res) => {
+app.put('/campgrounds/:id', validateCampground, catchAsync(async (req, res) => {
   // res.send("IT WORKED!")
   const { id } = req.params
   const campground = await Campground.findByIdAndUpdate(id, {...req.body.campground}, { new: true })
@@ -94,16 +115,18 @@ app.delete('/campgrounds/:id', catchAsync( async (req, res) => {
   await Campground.findByIdAndDelete(id)
   res.redirect('/campgrounds')
 }))
+
+app.all('*', (req, res, next) => {
+  next(new ExpressError('Page Not Found', 404))
+})
 // ========================================================
 
 // ======================== ERROR HANDLER ========================
-app.all('*', (req, res, next) => {
-  res.send("404 NOT FOUND")
-})
-
-
 app.use((err, req, res, next) => {
-  res.send('Oh Boy, something went wrong!')
+  const { statusCode = 500 } = err;
+  if(!err.message) err.message = 'Something went wrong!'
+  res.status(statusCode).render('error', {err})
+  // res.send('Oh Boy, something went wrong!')
 })
 // ===============================================================
 
