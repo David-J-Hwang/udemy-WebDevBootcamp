@@ -1,6 +1,7 @@
 // ======================== MongoDB server command ========================
 // - Open mongod: brew services start mongodb-community
 // - Open mongosh: mongosh
+// (127.0.0.1)
 // ========================================================================
 
 // ======================== External Modules ========================
@@ -16,7 +17,7 @@ const PORT = 3000
 // ======================== Using mongoose ========================
 const mongoose = require('mongoose')
 const Campground = require('./models/campground')
-mongoose.connect('mongodb://localhost:27017/yelp-camp')
+mongoose.connect('mongodb://127.0.0.1/yelp-camp')
 const db = mongoose.connection
 db.on('error', console.error.bind(console, "connection error:"))
 db.once('open', () => console.log('DATABASE CONNECTED!'.bgCyan))
