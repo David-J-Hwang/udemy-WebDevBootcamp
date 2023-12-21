@@ -4,6 +4,7 @@
 // (127.0.0.1)
 // MUST use url to this:
 // https://source.unsplash.com/collection/483251
+// Delete All Reviews: db.reviews.deleteMany({})
 // ========================================================================
 
 // ======================== External Modules ========================
@@ -24,6 +25,7 @@ const ExpressError = require('./utils/ExpressError')
 // ======================== Using mongoose ========================
 const mongoose = require('mongoose')
 const Campground = require('./models/campground')
+const Review = require('./models/review')
 mongoose.connect('mongodb://127.0.0.1/yelp-camp')
 const db = mongoose.connection
 db.on('error', console.error.bind(console, "connection error:"))
@@ -32,7 +34,7 @@ db.once('open', () => console.log('DATABASE CONNECTED!'.bgCyan))
 
 // ======================== Using Joi ========================
 // const Joi = require('joi')
-const { campgroundSchema } = require('./schemas')
+const { campgroundSchema, reviewSchema } = require('./schemas')
 // ===========================================================
 
 // ======================== Using ejs ========================
@@ -68,6 +70,16 @@ const validateCampground = (req, res, next) => {
   }
     // console.log(result)
 }
+
+const validateReview = (req, res, next) => {
+  const { error } = reviewSchema.validate(req.body)
+  if(error){
+    const msg = error.details.map(el => el.message).join(',')
+    throw new ExpressError(msg, 400)
+  } else {
+    next()
+  }
+}
 // =========================================================================
 
 // ======================== Routes ========================
@@ -93,7 +105,8 @@ app.post('/campgrounds', validateCampground, catchAsync(async (req, res, next) =
 
 app.get('/campgrounds/:id', catchAsync(async (req, res) => {
   const { id } = req.params
-  const campground = await Campground.findById(id)
+  const campground = await Campground.findById(id).populate('reviews')
+  // console.log(campground)
   res.render('campgrounds/show', { campground })
 }))
 
@@ -116,6 +129,27 @@ app.delete('/campgrounds/:id', catchAsync( async (req, res) => {
   res.redirect('/campgrounds')
 }))
 
+// Reviews Route
+app.post('/campgrounds/:id/reviews', validateReview, catchAsync( async(req, res) => {
+  // res.send('You made it!')
+  const { id } = req.params
+  const campground = await Campground.findById(id)
+  const review = new Review(req.body.review)
+  campground.reviews.push(review)
+  await review.save()
+  await campground.save()
+  res.redirect(`/campgrounds/${campground._id}`)
+}))
+
+app.delete('/campgrounds/:id/reviews/:reviewId', catchAsync( async(req, res) => {
+  const { id, reviewId } = req.params;
+  await Campground.findByIdAndUpdate(id, {$pull: { reviews: reviewId }})
+  await Review.findByIdAndDelete(reviewId)
+  // res.send('Delete Me!')
+  res.redirect(`/campgrounds/${id}`)
+}))
+
+
 app.all('*', (req, res, next) => {
   next(new ExpressError('Page Not Found', 404))
 })
@@ -133,3 +167,5 @@ app.use((err, req, res, next) => {
 // ======================== RUN SERVER ========================
 app.listen(PORT, () => console.log(`SERVER LISTENING ON PORT: ${PORT}...`.bgCyan))
 // ============================================================
+
+// POST /campgrounds/:id/reviews
