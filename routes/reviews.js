@@ -7,32 +7,9 @@ const ExpressError = require('../utils/ExpressError')
 const Campground = require('../models/campground')
 const Review = require('../models/review')
 
-const { reviewSchema } = require('../schemas')
+const { validateReview } = require('../middleware')
 
-// ======================== Using Custom Middleware ========================
-// if(!req.body.campground) throw new ExpressError('Invalid campground data', 400)
-// not a mongoose schema, validate before storing data into mongoose
-const validateCampground = (req, res, next) => {
-  const { error } = campgroundSchema.validate(req.body)
-  if(error){
-    const msg = error.details.map(el => el.message).join(',')
-    throw new ExpressError(msg, 400)
-  } else {
-    next()
-  }
-    // console.log(result)
-}
 
-const validateReview = (req, res, next) => {
-  const { error } = reviewSchema.validate(req.body)
-  if(error){
-    const msg = error.details.map(el => el.message).join(',')
-    throw new ExpressError(msg, 400)
-  } else {
-    next()
-  }
-}
-// =========================================================================
 
 // Reviews Route
 router.post('/', validateReview, catchAsync( async(req, res) => {
