@@ -1,1 +1,4 @@
 david ObjectId: 658d3eec6d23c9bf443a94b4
+
+          <% if(currentUser && review.author.equals(currentUser._id)){ %>
+          <% } %>
