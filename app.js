@@ -10,9 +10,10 @@
 // ======================== External Modules ========================
 const colors = require('colors')
 
-if(process.env.NODE_ENV !== 'production'){
-  require('dotenv').config();
-}
+// if(process.env.NODE_ENV !== 'production'){
+//   require('dotenv').config();
+// }
+require('dotenv').config()
 console.log(process.env.SECRET)
 console.log(process.env.API_KEY)
 // ==================================================================
@@ -59,6 +60,10 @@ const LocalStrategy = require('passport-local')
 const { campgroundSchema, reviewSchema } = require('./schemas')
 // ===========================================================
 
+// ======================== Express Mongoose Sanitize ========================
+const mongoSanitize = require('express-mongo-sanitize')
+// ===========================================================================
+
 // ======================== Using ejs ========================
 const path = require('path')
 app.set('view engine', 'ejs')
@@ -83,13 +88,17 @@ app.use(express.urlencoded({ extended: true }))
 app.use(express.static( path.join(__dirname, 'public') ))
 // =====================================================================
 
+app.use(mongoSanitize({ replaceWith: '_' }))
+
 // ======================== Using Sessions ========================
 const sessionConfig = {
   secret: 'thisshouldbeabettersecret',
   resave: false,
   saveUninitialized: true,
   cookie: {
+    name: 'session',
     httpOnly: true,
+    // secure: true,
     expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
     maxAge: 1000 * 60 * 60 * 24 * 7,
   }
@@ -107,6 +116,7 @@ passport.deserializeUser(User.deserializeUser())
 
 app.use((req, res, next) => {
   // console.log(req.session)
+  console.log(req.query)
   res.locals.currentUser = req.user
   res.locals.success = req.flash('success')
   res.locals.error = req.flash('error')
@@ -115,9 +125,9 @@ app.use((req, res, next) => {
 // ================================================================
 
 // ======================== Using Router ========================
+app.use('/', userRoutes)
 app.use('/campgrounds', campgroundRoutes)
 app.use('/campgrounds/:id/reviews', reviewRoutes)
-app.use('/', userRoutes)
 // ==============================================================
 
 // ======================== Routes ========================

