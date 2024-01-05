@@ -7,6 +7,7 @@
 // Delete All Reviews: db.reviews.deleteMany({})
 // ========================================================================
 
+
 // ======================== External Modules ========================
 const colors = require('colors')
 
@@ -35,11 +36,14 @@ const ExpressError = require('./utils/ExpressError')
 // ===========================================================================
 
 // ======================== Using mongoose ========================
+const dbUrl = process.env.DB_URL || "mongodb://127.0.0.1/yelp-camp";
+
 const mongoose = require('mongoose')
 const Campground = require('./models/campground')
 const Review = require('./models/review')
 const User = require('./models/user')
-mongoose.connect('mongodb://127.0.0.1/yelp-camp')
+// mongoose.connect('mongodb://127.0.0.1/yelp-camp')
+mongoose.connect(dbUrl)
 const db = mongoose.connection
 db.on('error', console.error.bind(console, "connection error:"))
 db.once('open', () => console.log('DATABASE CONNECTED!'.bgCyan))
@@ -48,6 +52,21 @@ db.once('open', () => console.log('DATABASE CONNECTED!'.bgCyan))
 // ======================== Sessions ========================
 const session = require('express-session')
 const flash = require('connect-flash')
+
+const MongoStore = require("connect-mongo")
+const secret = process.env.SECRET || "thisshouldbeabettersecret!"
+
+const store = MongoStore.create({
+  mongoUrl: dbUrl,
+  // mongoUrl: 'mongodb://127.0.0.1/yelp-camp',
+  touchAfter: 24 * 60 * 60,
+  crypto: {
+    secret,
+  },
+});
+store.on("error", function (e) {
+  console.log('Session Store Error!', e)
+})
 // ==========================================================
 
 // ======================== Passport ========================
@@ -91,8 +110,10 @@ app.use(express.static( path.join(__dirname, 'public') ))
 app.use(mongoSanitize({ replaceWith: '_' }))
 
 // ======================== Using Sessions ========================
+
 const sessionConfig = {
-  secret: 'thisshouldbeabettersecret',
+  store,
+  secret,
   resave: false,
   saveUninitialized: true,
   cookie: {
