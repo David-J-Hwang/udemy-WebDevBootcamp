@@ -7,17 +7,16 @@
 // Delete All Reviews: db.reviews.deleteMany({})
 // ========================================================================
 
-
 // ======================== ✅External Modules ========================
 // colors.js: 로그에 색상을 주는 라이브러리
-const colors = require('colors')
+const colors = require("colors");
 
 // 서비스를 운영하는 경우 호스팅 서비스에서 직접 환경변수를 지정하므로,
 // 개발상황인 경우에만 환경변수를 .env에서 가지고 온다
 // if(process.env.NODE_ENV !== 'production'){
 //   require('dotenv').config();
 // }
-require('dotenv').config()
+require("dotenv").config();
 
 // 환경변수를 직접 출력하는 것은 피하는 것이 좋다.
 // 꼭 필요한 경우나 개발환경인 경우에만 로깅하기.
@@ -27,22 +26,22 @@ require('dotenv').config()
 
 // ======================== ✅Express Server ========================
 // app: express 서버, 포트는 3000으로 한다
-const express = require('express')
-const app = express()
-const PORT = 3000
+const express = require("express");
+const app = express();
+const PORT = 3000;
 // ================================================================
 
 // ======================== ✅Routers ========================
 // /: userRoutes가 담당한다
 // /campgrounds: campgroundRoutes가 담당한다
 // /campgrounds/:id/reviews: userRoutes가 담당한다
-const campgroundRoutes = require('./routes/campgrounds')
-const reviewRoutes = require('./routes/reviews')
-const userRoutes = require('./routes/users')
+const campgroundRoutes = require("./routes/campgrounds");
+const reviewRoutes = require("./routes/reviews");
+const userRoutes = require("./routes/users");
 // =========================================================
 
 // ======================== ✅Using Custom Error Handler ========================
-const ExpressError = require('./utils/ExpressError')
+const ExpressError = require("./utils/ExpressError");
 // ===========================================================================
 
 // ======================== ✅Using mongoose ========================
@@ -50,34 +49,34 @@ const ExpressError = require('./utils/ExpressError')
 const dbUrl = process.env.DB_URL || "mongodb://127.0.0.1/yelp-camp";
 
 // mongoose와 Campground, Review, User 모델을 갖고온다
-const mongoose = require('mongoose')
-const Campground = require('./models/campground')
-const Review = require('./models/review')
-const User = require('./models/user')
+const mongoose = require("mongoose");
+const Campground = require("./models/campground");
+const Review = require("./models/review");
+const User = require("./models/user");
 
 // dbUrl로 MongoDB 서버에 연결을 시도한다
 // 127.0.0.1: 로컬 데이터베이스
 // mongoose.connect('mongodb://127.0.0.1/yelp-camp')
-mongoose.connect(dbUrl)
+mongoose.connect(dbUrl);
 
 // mongoose.connection: 데이터베이스 연결을 확인하거나 이벤트리스너를 추가할 수 있음.
 // 연결에러가 날 경우 connection error: ${에러} 형태로 로깅하기
 // 연결을 성공할 경우 DATABASE CONNECTED! 로깅하기
-const db = mongoose.connection
-db.on('error', console.error.bind(console, "connection error:"))
-db.once('open', () => console.log('DATABASE CONNECTED!'.bgCyan))
+const db = mongoose.connection;
+db.on("error", console.error.bind(console, "connection error:"));
+db.once("open", () => console.log("DATABASE CONNECTED!".bgCyan));
 // ================================================================
 
 // ======================== ✅Sessions ========================
 // exress-session: 유저의 세션을 관리한다.
 // connect-flash: 유저에게 전달할 일회성 메시지를 저장한다.
 // connect-mongo: 세션데이터를 MongoDB에 저장한다.
-const session = require('express-session')
-const flash = require('connect-flash')
-const MongoStore = require("connect-mongo")
+const session = require("express-session");
+const flash = require("connect-flash");
+const MongoStore = require("connect-mongo");
 
 // secret: 세션을 암호화하는 키.
-const secret = process.env.SECRET || "thisshouldbeabettersecret!"
+const secret = process.env.SECRET || "thisshouldbeabettersecret!";
 
 // store: MongoDB 서버로 세션 데이터를 저장한다.
 // MongoDB 서버로 dbUrl을 사용한다.
@@ -97,40 +96,40 @@ const store = MongoStore.create({
 // 세션을 저장하는 데 오류가 발생하는 경우 에러를 로깅한다.
 // (MongoDB 연결 끊어짐, 저장소에 문제 발생, ...)
 store.on("error", function (e) {
-  console.log('Session Store Error!', e)
-})
+  console.log("Session Store Error!", e);
+});
 // ==========================================================
 
 // ======================== ✅Passport ========================
 // passport.js: Authentication을 담당하는 라이브러리.
 // 로컬 로그인, OAuth, JWT로 로그인을 구현할 수 있다.
 // passport-local: 아이디와 비밀번호로 로그인하는 방식.
-const passport = require('passport')
-const LocalStrategy = require('passport-local')
+const passport = require("passport");
+const LocalStrategy = require("passport-local");
 // ==========================================================
 
 // ======================== ✅Using Joi ========================
 // Joi: 유저가 입력한 값의 유효성을 검사하는 라이브러리.
 // 직접 Joi라이브러리를 가져오는 대신, schemas.js에서 사용한다.
 // const Joi = require('joi')
-const { campgroundSchema, reviewSchema } = require('./schemas')
+const { campgroundSchema, reviewSchema } = require("./schemas");
 // ===========================================================
 
 // ======================== ✅Express Mongoose Sanitize ========================
 // NoSQL Injection: 유저가 MongoDB 쿼리를 입력해서 데이터를 조회하거나 수정하는 공격.
 // express-mongo-sanitize: 요청값에서 $나 .을 제거해 NoSQL Injection을 방지한다.
-const mongoSanitize = require('express-mongo-sanitize')
+const mongoSanitize = require("express-mongo-sanitize");
 // ===========================================================================
 
 // ======================== Using ejs ========================
-const path = require('path')
-app.set('view engine', 'ejs')
-app.set('views', path.join(__dirname, 'views'))
+const path = require("path");
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 // ===========================================================
 
 // ======================== Using ejs-mate ========================
-const ejsMate = require('ejs-mate')
-app.engine('ejs', ejsMate)
+const ejsMate = require("ejs-mate");
+app.engine("ejs", ejsMate);
 // ================================================================
 
 // ======================== ✅Using method-override ========================
@@ -138,8 +137,8 @@ app.engine('ejs', ejsMate)
 // method-override: form 형태의 request에서도 PUT, DELETE 요청을 보낼 수 있게 해준다.
 // <form action="/campgrounds/123?_method=DELETE" method="POST"><button>Submit</button></form>
 // => 브라우저에서 POST 요청을 보내지만, 서버에서는 DELETE /campgrounds/123으로 처리 가능하다.
-const methodOverride = require('method-override')
-app.use(methodOverride('_method'))
+const methodOverride = require("method-override");
+app.use(methodOverride("_method"));
 // =======================================================================
 
 // ======================== ✅Using body-parser ========================
@@ -149,84 +148,111 @@ app.use(methodOverride('_method'))
 // extended: false: 단순한 key-value 형태만 처리가능
 
 // <input type="text" name="title" />인 경우 req.body.title로 접근 가능하다.
-app.use(express.urlencoded({ extended: true }))
+app.use(express.urlencoded({ extended: true }));
 // ===================================================================
 
 // ======================== ✅Using Public Assets ========================
 // express.static(): 정적인 파일(CSS, javascript, 이미지)를 제공할 수 있다.
 // path.join(__dirname, 'public'): 현재 디렉토리에서 public/ 폴더를 정적파일 루트경로로 설정한다.
 // public/ 폴더 안 파일을 서버에서 직접 제공할 수 있다.
-app.use(express.static(path.join(__dirname, 'public')))
+app.use(express.static(path.join(__dirname, "public")));
 // =====================================================================
 
-// ======================== mongo-sanitize의 추가옵션 ========================
+// ======================== ✅mongo-sanitize의 추가옵션 ========================
 // replaceWith: '_': $와 .을 제거하는 대신 _로 바꾼다.
-app.use(mongoSanitize({ replaceWith: '_' }))
+app.use(mongoSanitize({ replaceWith: "_" }));
 // =========================================================================
 
-// ======================== Using Sessions ========================
-
+// ======================== ✅Using Sessions ========================
+// sessionConfig: 세션 설정
+// store: 세션 데이터를 MongoDB 서버로 저장한다.
+// secret: 세션을 secret으로 암호화한다.
+// resave: false: 바뀌지 않은 세션을 다시 저장하지 않는다
+// saveUninitialized: true: 초기화하지 않은 세션을 저장한다
+// httpOnly: true: XSS 방지, javascript에서 쿠키의 접근을 막는다
+// secure: true: HTTPS 환경에서만 쿠키를 전송한다
+// expires: 7일 후 쿠키를 만료한다
+// maxAge: 7일동안 쿠키를 유지한다
 const sessionConfig = {
   store,
   secret,
   resave: false,
   saveUninitialized: true,
   cookie: {
-    name: 'session',
+    name: "session",
     httpOnly: true,
     // secure: true,
     expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
     maxAge: 1000 * 60 * 60 * 24 * 7,
-  }
-}
-app.use(session(sessionConfig))
-app.use(flash())
+  },
+};
 
+// 서버에서 sessionConfig대로 세션을 사용한다.
+app.use(session(sessionConfig));
+
+// 서버에서 connect-flash를 사용한다.
+app.use(flash());
+
+// Passport를 초기화하고, 세션을 사용해 로그인 상태를 유지하도록 한다.
+// 사용자가 로그인하면 세션에 req.user를 저장한다.
 // passport.session() should be a latter part than using sessions
-app.use(passport.initialize())
-app.use(passport.session())
+app.use(passport.initialize());
+app.use(passport.session());
 
-passport.use(new LocalStrategy(User.authenticate()))
-passport.serializeUser(User.serializeUser())
-passport.deserializeUser(User.deserializeUser())
+// Passport로 로컬 로그인 방식을 사용한다.
+// 로그인에 성공하는 경우 사용자의 정보를 세션에 저장한다.
+// 세션에서 사용자 정보를 가져와서 req.user에 저장한다.
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
+// 모든 템플릿에서 로그인 정보와 메세지를 사용할 수 있도록 한다.
+// 모든 템플릿에서 currentUser를 사용해 로그인되었는지 확인이 가능하다.
+// 모든 템플릿에서 성공 메시지와 에러 메시지를 사용할 수 있다.
 app.use((req, res, next) => {
   // console.log(req.session)
-  console.log(req.query)
-  res.locals.currentUser = req.user
-  res.locals.success = req.flash('success')
-  res.locals.error = req.flash('error')
-  next()
-})
+  console.log(req.query);
+  res.locals.currentUser = req.user;
+  res.locals.success = req.flash("success");
+  res.locals.error = req.flash("error");
+  next();
+});
 // ================================================================
 
-// ======================== Using Router ========================
-app.use('/', userRoutes)
-app.use('/campgrounds', campgroundRoutes)
-app.use('/campgrounds/:id/reviews', reviewRoutes)
+// ======================== ✅Using Router ========================
+app.use("/", userRoutes);
+app.use("/campgrounds", campgroundRoutes);
+app.use("/campgrounds/:id/reviews", reviewRoutes);
 
 // Home Route
-app.get('/', (req, res) => {
-  res.render('campgrounds/home')
-})
+app.get("/", (req, res) => {
+  res.render("campgrounds/home");
+});
 
 // Not existing routes
-app.all('*', (req, res, next) => {
-  next(new ExpressError('Page Not Found', 404))
-})
+app.all("*", (req, res, next) => {
+  next(new ExpressError("Page Not Found", 404));
+});
 // ==============================================================
 
-// ======================== ERROR HANDLER ========================
+// ======================== ✅ERROR HANDLER ========================
+// 에러 핸들러 미들웨어, next(err)가 호출되는 경우 실행한다.
+// err에서 statusCode를 가져오고, 없는 경우 500으로 설정한다.
+// err의 메시지가 없는 경우, err의 message 멤벼변수를 'Something went wrong!'으로 설정한다.
+// error.ejs 페이지를 렌더링하면서 err 객체를 전달한다.
+// 단순히 텍스트 응답을 보낼 수도 있지만, error 페이지를 렌더링해 사용자 경험을 개선한다.
 app.use((err, req, res, next) => {
   const { statusCode = 500 } = err;
-  if (!err.message) err.message = 'Something went wrong!'
-  res.status(statusCode).render('error', { err })
+  if (!err.message) err.message = "Something went wrong!";
+  res.status(statusCode).render("error", { err });
   // res.send('Oh Boy, something went wrong!')
-})
+});
 // ===============================================================
 
 // ======================== ✅RUN SERVER ========================
-app.listen(PORT, () => console.log(`SERVER LISTENING ON PORT: ${PORT}...`.bgCyan))
+app.listen(PORT, () =>
+  console.log(`SERVER LISTENING ON PORT: ${PORT}...`.bgCyan)
+);
 // ============================================================
 
 // ======================== Routes ========================
